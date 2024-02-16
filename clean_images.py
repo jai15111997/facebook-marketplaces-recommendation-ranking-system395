@@ -19,6 +19,7 @@ class cleaning_images:
         dirs = os.listdir(path)
         final_size = 512
         for n, item in enumerate(dirs, 1):
+            filename, extension = os.path.splitext(item)
             im = Image.open('images_fb/images/' + item)
             new_im = cleaning_images.resize_image(final_size, im)
-            new_im.save(f'cleaned_images/{n}_resized.jpg')
+            new_im.save(f'cleaned_images/{filename}_resized.{extension}')
