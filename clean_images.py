@@ -22,4 +22,4 @@ class cleaning_images:
             filename, extension = os.path.splitext(item)
             im = Image.open('images_fb/images/' + item)
             new_im = cleaning_images.resize_image(final_size, im)
-            new_im.save(f'cleaned_images/{filename}_resized.{extension}')
+            new_im.save(f'cleaned_images/{filename}{extension}')

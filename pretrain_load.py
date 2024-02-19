@@ -6,16 +6,33 @@ import json
 import requests
 import matplotlib.pyplot as plt
 import warnings
-warnings.filterwarnings('ignore')
+from torchvision import datasets, models, transforms
 
-class pretrain():
-    def model_exec():
+class Pretrained(torch.nn.Module):
+    def __init__(self, dataset, dataloader):
+        super().__init__()
+        self.resnet_model = torch.hub.load(
+            'NVIDIA/DeepLearningExamples:torchhub', 'nvidia_resnet50', pretrained=True)
+        self.resnet_model.fc = torch.nn.Linear(2048, 13)
+        self.dataset = dataset
+        self.dataloader = dataloader
 
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-print(f'Using {device} for inference')
-print(torch.cuda.is_available())
+    def forward(self, inp):
+        return self.resnet_model(inp)
 
-resnet50 = torch.hub.load('NVIDIA/DeepLearningExamples:torchhub', 'nvidia_resnet50', pretrained=True)
-utils = torch.hub.load('NVIDIA/DeepLearningExamples:torchhub', 'nvidia_convnets_processing_utils')
-
-resnet50.eval().to(device)
+        #works if you used torch.nn.Sequential for layers
+    
+    def train(self, dataloader, epochs):
+        optmiser = torch.optim.Adam(self.resnet_model.parameters(), lr = 0.01)
+        F = torch.nn.CrossEntropyLoss()
+        for epoch in range(epochs):
+            for batch in dataloader:
+                features, labels = batch
+                predictions = self.resnet_model(features)
+                #print(predictions.shape)
+                #print(labels.shape)
+                loss = F(predictions, labels)
+                print(loss)
+                loss.backward()
+                optmiser.step()
+                optmiser.zero_grad()
