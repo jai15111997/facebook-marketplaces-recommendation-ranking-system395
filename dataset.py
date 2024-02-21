@@ -12,7 +12,7 @@ class DBS(Dataset):
         self.df = dataframe
         self.encoder = encoder
         self.decoder = decoder
-        self.transform = transforms.Compose([transforms.ToTensor()])
+        self.transform = transforms.Compose([transforms.Resize((224, 224)),transforms.ToTensor()])
         self.img_dbs = pd.read_csv('data/Images.csv')
         
     def __getitem__(self, index):
@@ -22,16 +22,16 @@ class DBS(Dataset):
         n = self.img_dbs[self.img_dbs['product_id'] == prod_id]
         name_id = list(n['id'])
         #print(name_id)
-        images = Image.new('RGB', (512, 512), color='white')
+        images = Image.new('RGB', (224, 224), color='white')
         for img in name_id:
             #images.append(Image.open(f'cleaned_images/{img}.jpg'))
             images = Image.open(f'cleaned_images/{img}.jpg')
             break
-        print(images)
+        #print(images)
         tensor = self.transform(images)
         prod_label = prod_record[-1]
         label = self.encoder[prod_label]
-        print(label)
+        #print(label)
         return (tensor, label)
     
     def __len__(self):

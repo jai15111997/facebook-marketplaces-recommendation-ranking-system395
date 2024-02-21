@@ -17,7 +17,7 @@ class cleaning_images:
     def process_images(self):
         path = "images_fb/images/"
         dirs = os.listdir(path)
-        final_size = 512
+        final_size = 256
         for n, item in enumerate(dirs, 1):
             filename, extension = os.path.splitext(item)
             im = Image.open('images_fb/images/' + item)
