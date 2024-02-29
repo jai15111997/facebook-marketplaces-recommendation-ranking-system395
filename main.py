@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
-
+import torch
 from clean_tabular_data import prod_clean
 from clean_images import cleaning_images
 from dataset import DBS
@@ -37,3 +37,4 @@ test_dataloader = DataLoader(test_dataset, batch_size = 8, shuffle = False)
 p_train = Pretrained(train_dataset, train_dataloader)
 p_train.train(train_dataloader, validation_dataloader, 2)
 
+torch.save(Pretrained.state_dict(), 'final_model/image_model.pt')

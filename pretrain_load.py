@@ -10,14 +10,31 @@ class Pretrained(torch.nn.Module):
     def __init__(self, dataset, dataloader):
         super().__init__()
         self.resnet_model = models.resnet50(pretrained=True)
-        self.resnet_model.fc = nn.Linear(2048, 13)
+        
+        # Freeze all layers except the last two
+        for param in self.resnet_model.parameters():
+            param.requires_grad = False
+        for param in self.resnet_model.layer3.parameters():
+            param.requires_grad = True
+        for param in self.resnet_model.layer4.parameters():
+            param.requires_grad = True
+
+        self.resnet_model = nn.Sequential(*list(self.resnet_model.children())[:-1])
+        self.fc = nn.Linear(1, 1000)
         self.dataset = dataset
         self.dataloader = dataloader
 
     def forward(self, inp):
-        return (self.resnet_model(inp))
+        # Pass the input through the model
+        features = self.resnet_model(inp)
+        
+        # Reshape the feature tensor
+        features = features.view(features.size(0), -1)
+        
+        # Pass it through the new fully connected layer
+        output = self.resnet_model.fc(features)
 
-        #works if you used torch.nn.Sequential for layers
+        return output
     
     def save_checkpoint(self, epoch, folder_path='model_evaluation'):
 
@@ -34,9 +51,7 @@ class Pretrained(torch.nn.Module):
     def train(self, dataloader, validation_dl, epochs):
         optmiser = optim.Adam(self.resnet_model.parameters(), lr = 0.001)
         writer = SummaryWriter()
-        device = torch.device("cuda")
-        #F = nn.functional.cross_entropy()
-        #F = torch.nn.MSELoss()
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         batch_idx = 0
         for epoch in range(epochs):
             for batch in dataloader:
@@ -44,7 +59,7 @@ class Pretrained(torch.nn.Module):
                 predictions = self.resnet_model(features)
                 #print(predictions.shape)
                 #print(labels.shape)
-                loss = nn.functional.cross_entropy(predictions, labels.long())
+                loss = nn.functional.cross_entropy(predictions, labels)
                 print(loss.item())
                 loss.backward()
                 optmiser.step()
@@ -52,7 +67,7 @@ class Pretrained(torch.nn.Module):
                 writer.add_scalar('loss', loss.item(), batch_idx)
                 batch_idx += 1
 
-            Pretrained.save_checkpoint(epoch)
+            self.save_checkpoint(epoch)
             self.resnet_model.eval()
             correct = 0
             total = 0
