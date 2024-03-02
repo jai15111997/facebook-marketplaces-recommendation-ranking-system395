@@ -29,8 +29,7 @@ class DBS(Dataset):
             break
         img_tensor = self.transform(image)
         prod_label = prod_record[-1]
-        label = self.encoder[prod_label]
-        #print(label)
+        label = torch.tensor(self.encoder[prod_label], dtype=torch.long)
         return (img_tensor, label)
     
     def __len__(self):

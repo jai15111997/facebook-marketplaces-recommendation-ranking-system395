@@ -9,32 +9,25 @@ from torch.utils.tensorboard import SummaryWriter
 class Pretrained(torch.nn.Module):
     def __init__(self, dataset, dataloader):
         super().__init__()
-        self.resnet_model = models.resnet50(pretrained=True)
+        resnet_model_initial = models.resnet50(pretrained=True)
         
         # Freeze all layers except the last two
-        for param in self.resnet_model.parameters():
-            param.requires_grad = False
-        for param in self.resnet_model.layer3.parameters():
-            param.requires_grad = True
-        for param in self.resnet_model.layer4.parameters():
-            param.requires_grad = True
+        for name, param in resnet_model_initial.named_parameters():
+            if 'layers.4.2' in name or 'layers.4.1' in name:
+                param.requires_grad = True
+            else:
+                param.requires_grad = False
 
-        self.resnet_model = nn.Sequential(*list(self.resnet_model.children())[:-1])
-        self.fc = nn.Linear(1, 1000)
+        added_layers = nn.Sequential(nn.ReLU(), nn.Linear(1000, 13))
+        self.resnet_model = nn.Sequential(resnet_model_initial, added_layers)
+        #self.fc = nn.Linear(1, 1000)
         self.dataset = dataset
         self.dataloader = dataloader
 
     def forward(self, inp):
         # Pass the input through the model
         features = self.resnet_model(inp)
-        
-        # Reshape the feature tensor
-        features = features.view(features.size(0), -1)
-        
-        # Pass it through the new fully connected layer
-        output = self.resnet_model.fc(features)
-
-        return output
+        return features
     
     def save_checkpoint(self, epoch, folder_path='model_evaluation'):
 
@@ -57,6 +50,7 @@ class Pretrained(torch.nn.Module):
             for batch in dataloader:
                 features, labels = batch
                 predictions = self.resnet_model(features)
+                #print(features.shape)
                 #print(predictions.shape)
                 #print(labels.shape)
                 loss = nn.functional.cross_entropy(predictions, labels)

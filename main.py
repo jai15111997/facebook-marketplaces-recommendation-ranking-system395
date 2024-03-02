@@ -37,4 +37,4 @@ test_dataloader = DataLoader(test_dataset, batch_size = 8, shuffle = False)
 p_train = Pretrained(train_dataset, train_dataloader)
 p_train.train(train_dataloader, validation_dataloader, 2)
 
-torch.save(Pretrained.state_dict(), 'final_model/image_model.pt')
+torch.save(p_train.state_dict(), 'final_model/image_model.pt')
