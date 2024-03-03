@@ -3,9 +3,12 @@ from torchvision import  models
 import torch.nn as nn
 import torch.optim as optim
 import os
+import json
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
-from image_processor import process_image
+from image_processor import image_utility
+
+img_util = image_utility()
 
 if __name__ == "__main__":
     print('Run main.py first!')
@@ -27,6 +30,7 @@ class Pretrained(torch.nn.Module):
         #self.fc = nn.Linear(1, 1000)
         self.dataset = dataset
         self.dataloader = dataloader
+        self.img_embedding_dict = {}
 
     def forward(self, inp):
         # Pass the input through the model
@@ -49,12 +53,14 @@ class Pretrained(torch.nn.Module):
         optmiser = optim.Adam(self.resnet_model.parameters(), lr = 0.001)
         writer = SummaryWriter()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        batch_idx = 0
+        global_step = 0
         for epoch in range(epochs):
             for batch in dataloader:
-                features_img_batch, labels = batch
-                features = process_image(features_img_batch)
+                batch_images, labels = batch
+                features = img_util.process_image(batch_images)
                 predictions = self.resnet_model(features)
+                self.img_embedding_dict.update(img_util.dict_updater(batch_images))
+                #print(self.img_embedding_dict)
                 #print(features.shape)
                 #print(predictions.shape)
                 #print(labels.shape)
@@ -63,13 +69,14 @@ class Pretrained(torch.nn.Module):
                 loss.backward()
                 optmiser.step()
                 optmiser.zero_grad()
-                writer.add_scalar('loss', loss.item(), batch_idx)
-                batch_idx += 1
+                writer.add_scalar('loss', loss.item(), global_step)
+                global_step += 1
 
             self.save_checkpoint(epoch)
             self.resnet_model.eval()
             correct = 0
             total = 0
+            
             with torch.no_grad():
                 for inputs, labels in validation_dl:
                     inputs, labels = inputs.to(device), labels.to(device)
@@ -79,3 +86,6 @@ class Pretrained(torch.nn.Module):
                     correct += (predicted == labels).sum().item()
                     accuracy = correct / total
                     print(f'accuracy = {accuracy}')
+        
+        with open('image_embeddings.json', 'w') as json_file:
+            json.dump(self.img_embedding_dict, json_file)
