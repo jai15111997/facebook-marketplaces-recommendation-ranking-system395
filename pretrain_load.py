@@ -59,7 +59,7 @@ class Pretrained(torch.nn.Module):
                 batch_images, labels = batch
                 features = img_util.process_image(batch_images)
                 predictions = self.resnet_model(features)
-                self.img_embedding_dict.update(img_util.dict_updater(batch_images))
+                self.img_embedding_dict.update(img_util.dict_updater(batch_images, predictions))
                 #print(self.img_embedding_dict)
                 #print(features.shape)
                 #print(predictions.shape)
@@ -76,7 +76,7 @@ class Pretrained(torch.nn.Module):
             self.resnet_model.eval()
             correct = 0
             total = 0
-            
+
             with torch.no_grad():
                 for inputs, labels in validation_dl:
                     inputs, labels = inputs.to(device), labels.to(device)

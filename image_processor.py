@@ -33,12 +33,13 @@ class image_utility:
         
         return stacked_images
 
-    def dict_updater(self, image_batch):
+    def dict_updater(self, image_batch, predictions):
+        i = 0
         for index in image_batch:
             for img in index:
                 image = Image.new('RGB', (256, 256), color='white')
                 if img != '':
                     image = Image.open(img).convert("RGB")
-                img_transform = self.image_transform(image)
-                self.dict[img] = img_transform
+                self.dict[img] = predictions[i]
+                i += 1
         return self.dict
