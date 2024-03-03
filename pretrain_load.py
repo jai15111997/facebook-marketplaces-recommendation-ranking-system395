@@ -5,6 +5,7 @@ import torch.optim as optim
 import os
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
+from image_processor import process_image
 
 class Pretrained(torch.nn.Module):
     def __init__(self, dataset, dataloader):
@@ -48,7 +49,8 @@ class Pretrained(torch.nn.Module):
         batch_idx = 0
         for epoch in range(epochs):
             for batch in dataloader:
-                features, labels = batch
+                features_img_batch, labels = batch
+                features = process_image(features_img_batch)
                 predictions = self.resnet_model(features)
                 #print(features.shape)
                 #print(predictions.shape)
