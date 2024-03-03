@@ -1,5 +1,3 @@
-import pandas as pd
-import numpy as np
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 import torch
@@ -19,6 +17,9 @@ for x in range(0, len(label_list)):
     decoder[x] = label_list[x]
     value = label_list[x]
     encoder[value] = x
+
+encoder['white-image'] = 13 
+decoder[13] = 'white-image'
 #df.to_csv('data/training_data.csv',)
 
 #resize_img_exec.process_images()

@@ -1,7 +1,7 @@
 import pandas as pd
 from torch.utils.data import Dataset
-from PIL import Image
 import torch
+from PIL import Image
 
 if __name__ == "__main__":
     print('Run main.py first!')
@@ -27,8 +27,13 @@ class DBS(Dataset):
             image = f'cleaned_images/{img_path}.jpg'
             break
         img_tensor = []
+        
+        if image == '':
+            prod_label = 'white-image'
+        else:
+            prod_label = prod_record[-1]
+        
         img_tensor.append(image)
-        prod_label = prod_record[-1]
         label = torch.tensor(self.encoder[prod_label], dtype=torch.long)
         return (img_tensor, label)
     

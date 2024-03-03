@@ -2,6 +2,9 @@ import torch
 from PIL import Image
 import torchvision.transforms as transforms
 
+if __name__ == "__main__":
+    print('Run main.py first!')
+
 def process_image(image_batch):
     image_transform = transforms.Compose([
         transforms.Resize(256),

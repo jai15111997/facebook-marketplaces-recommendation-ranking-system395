@@ -1,11 +1,14 @@
 import torch
-from torchvision import datasets, models, transforms
+from torchvision import  models
 import torch.nn as nn
 import torch.optim as optim
 import os
 from datetime import datetime
 from torch.utils.tensorboard import SummaryWriter
 from image_processor import process_image
+
+if __name__ == "__main__":
+    print('Run main.py first!')
 
 class Pretrained(torch.nn.Module):
     def __init__(self, dataset, dataloader):
@@ -19,7 +22,7 @@ class Pretrained(torch.nn.Module):
             else:
                 param.requires_grad = False
 
-        added_layers = nn.Sequential(nn.ReLU(), nn.Linear(1000, 13))
+        added_layers = nn.Sequential(nn.ReLU(), nn.Linear(1000, 14))
         self.resnet_model = nn.Sequential(resnet_model_initial, added_layers)
         #self.fc = nn.Linear(1, 1000)
         self.dataset = dataset

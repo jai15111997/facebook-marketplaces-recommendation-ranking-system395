@@ -2,6 +2,7 @@ import pandas as pd
 
 if __name__ == "__main__":
     print('Run main.py first!')
+    
 class prod_clean:       
     def data_clean():
         df = pd.read_csv('data/Products.csv', lineterminator='\n')
