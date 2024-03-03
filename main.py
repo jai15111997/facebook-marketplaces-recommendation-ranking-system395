@@ -5,6 +5,7 @@ from clean_tabular_data import prod_clean
 from clean_images import cleaning_images
 from dataset import DBS
 from pretrain_load import Pretrained
+from FAISS_Search_Index import Search
 
 clean_tabular_data = prod_clean()
 resize_img_exec = cleaning_images()
@@ -39,3 +40,8 @@ p_train = Pretrained(train_dataset, train_dataloader)
 p_train.train(train_dataloader, validation_dataloader, 2)
 
 torch.save(p_train.state_dict(), 'final_model/image_model.pt')
+
+print('Enter Image ID to be searched (Including File Extension)')
+img_id = input()
+query = Search()
+query.search_img(img_id)
