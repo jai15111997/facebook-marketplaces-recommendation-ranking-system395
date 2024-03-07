@@ -1,7 +1,7 @@
 import faiss
 import numpy as np
 import json
-class Search():
+class Search:
 
     def __init__(self):
 
