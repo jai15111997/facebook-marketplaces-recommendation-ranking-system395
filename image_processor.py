@@ -37,9 +37,10 @@ class image_utility:
         i = 0
         for index in image_batch:
             for img in index:
-                image = Image.new('RGB', (256, 256), color='white')
-                if img != '':
-                    image = Image.open(img).convert("RGB")
-                self.dict[img] = predictions[i]
+                if img == '':
+                    img_name = 'NULL'
+                    self.dict[img_name] = predictions[i]
+                else: 
+                    self.dict[img] = predictions[i]
                 i += 1
         return self.dict

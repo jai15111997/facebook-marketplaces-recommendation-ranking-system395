@@ -7,6 +7,7 @@ from PIL import Image
 from fastapi import File
 from fastapi import UploadFile
 from fastapi import Form
+import faiss
 import torch
 import torch.nn as nn
 from pydantic import BaseModel
@@ -17,6 +18,7 @@ from torchvision import  models
 ##############################################################
 from image_processor import image_utility
 img_util = image_utility()
+from dataset import DBS
 
 class FeatureExtractor(nn.Module):
     def __init__(self, decoder: dict = None):
@@ -38,7 +40,6 @@ class FeatureExtractor(nn.Module):
 
         added_layers = nn.Sequential(nn.ReLU(), nn.Linear(1000, 14))
         self.resnet_model = nn.Sequential(resnet_model_initial, added_layers)
-        self.img_embedding_dict = {}
         self.decoder = decoder
 
     def forward(self, image):
@@ -49,11 +50,11 @@ class FeatureExtractor(nn.Module):
         with torch.no_grad():
             x = self.forward(image)
             return x
-
+'''
 # Don't change this, it will be useful for one of the methods in the API
 class TextItem(BaseModel):
     text: str
-
+'''
 
 
 try:
@@ -78,6 +79,7 @@ try:
 # which is was saved as a pickle with all the image embeddings   #
 # fit into it.                                                   #
 ##################################################################
+    index = faiss.read_index('appended_file.pkl')
     pass
 except:
     raise OSError("No Image model found. Check that you have the encoder and the model in the correct location")
@@ -104,17 +106,19 @@ def predict_image(image: UploadFile = File(...)):
     # sent to your API. Apply the corresponding methods to extract #
     # the image features/embeddings.                               #
     ################################################################
-
-    return JSONResponse(content={
-    "features": "", # Return the image embeddings here
+    img_tfrm = img_util.image_transform(pil_image)
+    img_emb = feature_model(img_tfrm)
+    return JSONResponse(content={"features": img_emb,}) # Return the image embeddings here
     
-        })
+        
   
 @app.post('/predict/similar_images')
-def predict_combined(image: UploadFile = File(...), text: str = Form(...)):
-    print(text)
-    pil_image = Image.open(image.file)
+def predict_combined(image: UploadFile = File(...)):
     
+    pil_image = Image.open(image.file)
+    img_tfrm = img_util.image_transform(pil_image)
+    img_emb = feature_model(img_tfrm)
+    s_index = img_util.search_img(img_emb)
     #####################################################################
     # TODO                                                              #
     # Process the input  and use it as input for the feature            #
@@ -124,9 +128,8 @@ def predict_combined(image: UploadFile = File(...), text: str = Form(...)):
     # model. This will give you index of similar images.                #            
     #####################################################################
 
-    return JSONResponse(content={
-    "similar_index": "", # Return the index of similar images here
-        })
+    return JSONResponse(content={"similar_index": s_index,}) # Return the index of similar images here, pass a dict here
+
     
     
 if __name__ == '__main__':
