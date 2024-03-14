@@ -8,8 +8,8 @@ class Search:
         with open('image_embeddings.json', 'r') as json_file:
             self.img_embedding_dict = json.load(json_file)
         self.image_id_list = list(self.img_embedding_dict.keys())
-        self.embeddings_list = list(self.img_embedding_dict.values())
-        self.index = faiss.IndexFlatL2(1)
+        self.embeddings_list = np.array(list(self.img_embedding_dict.values()), dtype = np.float32)
+        self.index = faiss.IndexFlatL2(self.embeddings_list.shape[1])
         self.index.add(self.embeddings_list)
         
     def save_func(self):

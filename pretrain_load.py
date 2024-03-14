@@ -52,7 +52,8 @@ class Pretrained(torch.nn.Module):
     def train(self, dataloader, validation_dl, epochs):
         optmiser = optim.Adam(self.resnet_model.parameters(), lr = 0.001)
         writer = SummaryWriter()
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cpu")
         global_step = 0
         for epoch in range(epochs):
             for batch in dataloader:
@@ -78,8 +79,10 @@ class Pretrained(torch.nn.Module):
             total = 0
 
             with torch.no_grad():
-                for inputs, labels in validation_dl:
-                    inputs, labels = inputs.to(device), labels.to(device)
+                for input_names, labels_names in validation_dl:
+                    input_tensors = img_util.process_image(input_names)
+                    labels_tensors = torch.tensor(labels_names)
+                    inputs, labels = input_tensors.to(device), torch.tensor(labels_tensors).to(device)
                     outputs = self.resnet_model(inputs)
                     _, predicted = torch.max(outputs.data, 1)
                     total += labels.size(0)

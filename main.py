@@ -41,7 +41,8 @@ p_train.train(train_dataloader, validation_dataloader, 1)
 
 torch.save(p_train.state_dict(), 'final_model/image_model.pt')
 
-print('Enter Image ID to be searched (Including File Extension)')
-img_id = input()
+
+#print('Enter Image ID to be searched (Including File Extension)')
+#img_id = input()
 query = Search()
-query.search_img(img_id)
+query.save_func()
