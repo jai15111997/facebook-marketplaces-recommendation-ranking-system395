@@ -1,5 +1,7 @@
 #import pickle
 import uvicorn
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 #from pydantic import BaseModel
@@ -10,6 +12,7 @@ from fastapi import Form
 import faiss
 import torch
 import torch.nn as nn
+from FAISS_api_search import Search
 #from pydantic import BaseModel
 from torchvision import  models
 ##############################################################
@@ -19,6 +22,7 @@ from torchvision import  models
 from image_processor import image_utility
 img_util = image_utility()
 #from ..dataset import DBS
+srch = Search()
 
 class FeatureExtractor(nn.Module):
     def __init__(self, decoder: dict = None):
@@ -43,7 +47,7 @@ class FeatureExtractor(nn.Module):
         self.decoder = decoder
 
     def forward(self, image):
-        x = self.main(image)
+        x = self.resnet_model(image)
         return x
 
     def predict(self, image):
@@ -98,7 +102,7 @@ def healthcheck():
 @app.post('/predict/feature_embedding')
 def predict_image(image: UploadFile = File(...)):
     pil_image = Image.open(image.file)
-
+    
     ################################################################
     # TODO                                                         #
     # Process the input and use it as input for the feature        #
@@ -107,8 +111,9 @@ def predict_image(image: UploadFile = File(...)):
     # the image features/embeddings.                               #
     ################################################################
     img_tfrm = img_util.image_transform(pil_image)
+    img_tfrm = img_tfrm.unsqueeze(0)
     img_emb = feature_model(img_tfrm)
-    return JSONResponse(content={"features": img_emb,}) # Return the image embeddings here
+    return JSONResponse(content={"features": img_emb.tolist()[0]}) # Return the image embeddings here
     
         
   
@@ -117,8 +122,9 @@ def predict_combined(image: UploadFile = File(...)):
     
     pil_image = Image.open(image.file)
     img_tfrm = img_util.image_transform(pil_image)
+    img_tfrm = img_tfrm.unsqueeze(0)
     img_emb = feature_model(img_tfrm)
-    s_index = img_util.search_img(img_emb)
+    s_index = srch.search_img(img_emb)
     #####################################################################
     # TODO                                                              #
     # Process the input  and use it as input for the feature            #
@@ -129,8 +135,6 @@ def predict_combined(image: UploadFile = File(...)):
     #####################################################################
 
     return JSONResponse(content={"similar_index": s_index,}) # Return the index of similar images here, pass a dict here
-
-    
     
 if __name__ == '__main__':
   uvicorn.run("api:app", host="0.0.0.0", port=8080)
