@@ -3,7 +3,7 @@ from PIL import Image
 import torchvision.transforms as transforms
 
 if __name__ == "__main__":
-    print('Run main.py first!')
+    print('api.py first!')
 
 class image_utility:
 
