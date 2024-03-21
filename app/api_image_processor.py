@@ -32,16 +32,3 @@ class image_utility:
         stacked_images = torch.stack(img_list_transformed, dim=0)
         
         return stacked_images
-
-    def dict_updater(self, image_batch, predictions):
-        i = 0
-        for index in image_batch:
-            for img in index:
-                if img == '':
-                    img_name = 'NULL'
-                    self.dict[img_name] = predictions[i].tolist()
-                else:
-                    img_name = img.split('/')[1] 
-                    self.dict[img_name] = predictions[i].tolist()
-                i += 1
-        return self.dict

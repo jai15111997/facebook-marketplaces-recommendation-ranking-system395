@@ -5,3 +5,9 @@ images_fb/
 model_evaluation/
 runs/
 final_model/
+app/__pycache__/
+app/appended_file.pkl
+app/image_embeddings.json
+app/image_model.pt
+image_embeddings.json
+appended_file.pkl

@@ -1,27 +1,22 @@
-#import pickle
 import uvicorn
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-#from pydantic import BaseModel
 from PIL import Image
 from fastapi import File
 from fastapi import UploadFile
-from fastapi import Form
 import faiss
 import torch
 import torch.nn as nn
 from FAISS_api_search import Search
-#from pydantic import BaseModel
 from torchvision import  models
 ##############################################################
 # TODO                                                       #
 # Import your image processing script here                 #
 ##############################################################
-from image_processor import image_utility
+from api_image_processor import image_utility
 img_util = image_utility()
-#from ..dataset import DBS
 srch = Search()
 
 class FeatureExtractor(nn.Module):
@@ -70,7 +65,7 @@ try:
 # the weights in it here.                                       #
 #################################################################
     feature_model = FeatureExtractor()
-    feature_model.load_state_dict(torch.load('../final_model/image_model.pt'))
+    feature_model.load_state_dict(torch.load('image_model.pt'))
     feature_model.eval()
     pass
 except:
@@ -83,7 +78,7 @@ try:
 # which is was saved as a pickle with all the image embeddings   #
 # fit into it.                                                   #
 ##################################################################
-    index = faiss.read_index('../appended_file.pkl')
+    index = faiss.read_index('appended_file.pkl')
     pass
 except:
     raise OSError("No Image model found. Check that you have the encoder and the model in the correct location")

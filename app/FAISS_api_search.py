@@ -5,7 +5,7 @@ class Search:
 
     def __init__(self):
 
-        with open('../image_embeddings.json', 'r') as json_file:
+        with open('image_embeddings.json', 'r') as json_file:
             self.img_embedding_dict = json.load(json_file)
         self.image_id_list = list(self.img_embedding_dict.keys())
         self.embeddings_list = np.array(list(self.img_embedding_dict.values()), dtype = np.float32)
