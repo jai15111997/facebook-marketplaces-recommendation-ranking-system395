@@ -1,33 +1,29 @@
-import uvicorn
-import os
-os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
-from fastapi import FastAPI
-from fastapi.responses import JSONResponse
-from PIL import Image
-from fastapi import File
-from fastapi import UploadFile
+from api_image_processor import image_utility # Import Essential Classes and Packages
 import faiss
+from FAISS_api_search import Search
+from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import JSONResponse
+import os
+from PIL import Image
 import torch
 import torch.nn as nn
-from FAISS_api_search import Search
-from torchvision import  models
-##############################################################
-# TODO                                                       #
-# Import your image processing script here                 #
-##############################################################
-from api_image_processor import image_utility
+from torchvision import models
+import uvicorn
+
+# Set environment variable to avoid duplicate library loading issues (Remove it if already configured on the System!)
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
+# Initialize image utility and search classes
 img_util = image_utility()
 srch = Search()
 
+# Define a custom feature extraction model
 class FeatureExtractor(nn.Module):
-    def __init__(self, decoder: dict = None):
-        super(FeatureExtractor, self).__init__()
 
-##############################################################
-# TODO                                                       #
-# Populate the __init__ method, so that it contains the same #
-# structure as the model you used to train the image model   #
-##############################################################
+    def __init__(self, decoder: dict = None):
+
+        super(FeatureExtractor, self).__init__()
+        # Load pre-trained ResNet50 model
         resnet_model_initial = models.resnet50(pretrained=True)
         
         # Freeze all layers except the last two
@@ -49,87 +45,65 @@ class FeatureExtractor(nn.Module):
         with torch.no_grad():
             x = self.forward(image)
             return x
-'''
-# Don't change this, it will be useful for one of the methods in the API
-class TextItem(BaseModel):
-    text: str
-'''
 
-
+# Attempt to load the feature extraction model and FAISS index
 try:
-#################################################################
-# TODO                                                          #
-# Load the Feature Extraction model. Above, we have initialized #
-# a class that inherits from nn.Module, and has the same        #
-# structure as the model that you used for training it. Load    #
-# the weights in it here.                                       #
-#################################################################
+
     feature_model = FeatureExtractor()
     feature_model.load_state_dict(torch.load('image_model.pt'))
     feature_model.eval()
     pass
+
 except:
+
     raise OSError("No Feature Extraction model found. Check that you have the decoder and the model in the correct location")
 
 try:
-##################################################################
-# TODO                                                           #
-# Load the FAISS model. Use this space to load the FAISS model   #
-# which is was saved as a pickle with all the image embeddings   #
-# fit into it.                                                   #
-##################################################################
-    index = faiss.read_index('appended_file.pkl')
+
+    index = faiss.read_index('appended_file.pkl') # Load the pickle file
     pass
+
 except:
+    
     raise OSError("No Image model found. Check that you have the encoder and the model in the correct location")
 
-
+# Create a FastAPI instance
 app = FastAPI()
 print("Starting server")
 
+# Health check endpoint to verify server status
 @app.get('/healthcheck')
+
 def healthcheck():
+  
   msg = "API is up and running!"
   
   return {"message": msg}
 
-  
+# Endpoint to predict image embeddings  
 @app.post('/predict/feature_embedding')
+
 def predict_image(image: UploadFile = File(...)):
+
     pil_image = Image.open(image.file)
-    
-    ################################################################
-    # TODO                                                         #
-    # Process the input and use it as input for the feature        #
-    # extraction model image. File is the image that the user      #
-    # sent to your API. Apply the corresponding methods to extract #
-    # the image features/embeddings.                               #
-    ################################################################
     img_tfrm = img_util.image_transform(pil_image)
     img_tfrm = img_tfrm.unsqueeze(0)
     img_emb = feature_model(img_tfrm)
-    return JSONResponse(content={"features": img_emb.tolist()[0]}) # Return the image embeddings here
+    return JSONResponse(content={"features": img_emb.tolist()[0]}) # Return the image embeddings
     
-        
-  
+# Endpoint to predict similar images using FAISS index          
 @app.post('/predict/similar_images')
+
 def predict_combined(image: UploadFile = File(...)):
     
-    pil_image = Image.open(image.file)
-    img_tfrm = img_util.image_transform(pil_image)
-    img_tfrm = img_tfrm.unsqueeze(0)
+    pil_image = Image.open(image.file) # Opening Image File
+    img_tfrm = img_util.image_transform(pil_image) # Transforming Image to a Tensor
+    img_tfrm = img_tfrm.unsqueeze(0) # Converting 3D Tensor to 4D Tensor to match the Dimensions for the Model Input
     img_emb = feature_model(img_tfrm)
-    s_index = srch.search_img(img_emb)
-    #####################################################################
-    # TODO                                                              #
-    # Process the input  and use it as input for the feature            #
-    # extraction model.File is the image that the user sent to your API #   
-    # Once you have feature embeddings from the model, use that to get  # 
-    # similar images by passing the feature embeddings into FAISS       #
-    # model. This will give you index of similar images.                #            
-    #####################################################################
-
-    return JSONResponse(content={"similar_index": s_index,}) # Return the index of similar images here, pass a dict here
+    s_index = srch.search_img(img_emb) # Calling Search Function to find Similar Images 
     
+    return JSONResponse(content={"similar_index": s_index,}) # Return the index of similar images
+
+# Run the FastAPI server    
 if __name__ == '__main__':
   uvicorn.run("api:app", host="0.0.0.0", port=8080)
