@@ -1,4 +1,3 @@
-user_key_pair.pem
 __pycache__/
 cleaned_images/
 images_fb/
@@ -11,3 +10,4 @@ app/image_embeddings.json
 app/image_model.pt
 image_embeddings.json
 appended_file.pkl
+user_key_pair.pem
